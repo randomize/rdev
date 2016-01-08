@@ -1,0 +1,9 @@
+[package]
+name = "hw-2"
+version = "0.1.0"
+authors = ["Randy <randomize46@gmail.com>"]
+
+[dependencies]
+
+[[bin]]
+name = "welcome"
