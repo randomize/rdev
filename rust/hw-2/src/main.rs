@@ -1,3 +1,18 @@
+
+
+// Rust test program
+
 fn main() {
-    println!("Hello, world!");
+
+    let mut x = vec!["Hello", "world"];
+
+    let y = x[0].clone();
+
+    {
+        let y = &x[0];
+    }
+
+    x.push("foo");
+
+    // println!(y);
 }
