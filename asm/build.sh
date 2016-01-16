@@ -2,10 +2,14 @@
 
 . ~/bin/include/colors
 
+echo_red " === Clearing ==================" 
+rm -rf ./a.out ./tiny.o
+
+
 echo_red " === Compiling =================" 
 
 nasm -f elf64 tiny.asm
-gcc -Wall -s tiny.o
+gcc -Wall -s -nostartfiles tiny.o
 
 echo_red " === Dumping ==================="
 

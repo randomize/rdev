@@ -2,10 +2,12 @@
 ; vim: ft=nasm
 BITS 64
 
-GLOBAL main
+EXTERN _exit
+GLOBAL _start
+
 SECTION .text
 
-main:
-    nop
-    mov rax, 43
-    ret
+_start:
+    xor rdi, rdi
+    inc rdi
+    call _exit
