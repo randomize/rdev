@@ -12,21 +12,16 @@
 using namespace std;
 using namespace Eigen;
 
-int main(int argc, char* argv[]) {
+typedef Matrix<double,10000,1> ArrayRandy;
+
+int main()
+{
+
+    auto x = ArrayRandy::Random();
+    auto y = ArrayRandy::Random();
+
+    cout << "===============\n" << x.dot(y)  << endl;
     
-    cout << "Hello World" << endl;
-
-    typedef Matrix<double,10000,1> ArrayRandy;
-    ArrayRandy x;
-    ArrayRandy y;
-
-    x = ArrayRandy::Random();
-    y = ArrayRandy::Random();
-
-    cout << x.dot(y)  << endl;
-
-    
-
     return 0;
 }
 
