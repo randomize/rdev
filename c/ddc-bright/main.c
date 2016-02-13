@@ -29,27 +29,40 @@
 #include <fcntl.h>
 #include <string.h>
 
+const char* myfifo = "/tmp/myfifo-bright";
 
 int main(int argc, char** argv)
 {
-    if (argc != 2)
+
+
+    if (argc == 2)  // if called with parameter => write to fifo
     {
-        printf("Usage ddc-bright value\n");
-        exit(1);
-    }
-
-    pid_t pid;
-
-    /* Fork off the parent process */       
-    pid = fork();
-    if (pid < 0) {
-        exit(EXIT_FAILURE);
-    }
-    /* If we got a good PID, then
-       we can exit the parent process. */
-    if (pid > 0) {
+        printf("Writing brightness %s", argv[1]);
+        int fd = open(myfifo, O_WRONLY);
+        write(fd, "Hi", sizeof("Hi"));
+        close(fd);
         exit(EXIT_SUCCESS);
     }
+    else
+    {
+        fprintf(stdout, "Running daemon mode\n");
+    }
+
+    // create the FIFO (named pipe)
+    mkfifo(myfifo, 0666);
+    int fd = open(myfifo, O_RDONLY);
+    char buf[1];
+
+    while (read(fd, buf, 1) == 1) // while there is character
+    {
+        printf("%x\n", buf[0]);
+    }
+
+    printf("Exiting\n");
+    unlink(myfifo);
+    exit(0);
+
+
 
     int ret;
 
@@ -72,7 +85,7 @@ int main(int argc, char** argv)
     if (!ddcci_init(datadir))
     {
         printf("Unable to initialize ddcci library.\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     fn = "dev:/dev/i2c-6";
@@ -94,15 +107,25 @@ int main(int argc, char** argv)
         printf("\tPlug and Play ID: %s [%s]\n", mon.pnpid, mon.db ? mon.db->name : NULL);
         printf("\tInput type: %s\n", mon.digital ? "Digital" : "Analog");
 
-        if (value >= 0)
+        /*FILE* stream;
+        int c;
+        stream = fdopen(file, "r");
+
+        while ((value = fgetc(stream)) != EOF)
         {
-            // no delay!
-            ddcci_writectrl(&mon, ctrl, value, -1);
-        }
+            if (value >= 0)
+            {
+                // no delay!
+                ddcci_writectrl(&mon, ctrl, value, -1);
+            }
+        }*/
     }
+
+    // free FIFO
+    unlink(myfifo);
 
     ddcci_close(&mon);
     ddcci_release();
 
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
