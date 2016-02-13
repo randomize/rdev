@@ -26,10 +26,22 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <string.h>
 
-const char* myfifo = "/tmp/myfifo-bright";
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
+#define BUFLEN 1
+#define PORT 9930
+
+
+void diep(const char* s)
+{
+    perror(s);
+    exit(1);
+}
 
 int main(int argc, char** argv)
 {
@@ -37,31 +49,13 @@ int main(int argc, char** argv)
 
     if (argc == 2)  // if called with parameter => write to fifo
     {
-        printf("Writing brightness %s", argv[1]);
-        int fd = open(myfifo, O_WRONLY);
-        write(fd, "Hi", sizeof("Hi"));
-        close(fd);
+        fprintf(stdout, "Writing brightness %s", argv[1]);
+        /* TODO: send udp */
         exit(EXIT_SUCCESS);
     }
-    else
-    {
-        fprintf(stdout, "Running daemon mode\n");
-    }
 
-    // create the FIFO (named pipe)
-    mkfifo(myfifo, 0666);
-    int fd = open(myfifo, O_RDONLY);
-    char buf[1];
-
-    while (read(fd, buf, 1) == 1) // while there is character
-    {
-        printf("%x\n", buf[0]);
-    }
-
-    printf("Exiting\n");
-    unlink(myfifo);
-    exit(0);
-
+    // daemon will listen on PORT
+    fprintf(stdout, "Running daemon mode...\n");
 
 
     int ret;
@@ -76,9 +70,6 @@ int main(int argc, char** argv)
 
     // Setting brightness register
     int ctrl  = 0x10;
-    int value = atoi(argv[1]);
-
-    printf("Setting %d to %d value\n", ctrl, value);
 
     ddcci_verbosity(verbosity);
 
@@ -107,22 +98,48 @@ int main(int argc, char** argv)
         printf("\tPlug and Play ID: %s [%s]\n", mon.pnpid, mon.db ? mon.db->name : NULL);
         printf("\tInput type: %s\n", mon.digital ? "Digital" : "Analog");
 
-        /*FILE* stream;
-        int c;
-        stream = fdopen(file, "r");
+        // Starting server
+        int s;  // Socket
 
-        while ((value = fgetc(stream)) != EOF)
+        // Loop
+        if ((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1)
         {
-            if (value >= 0)
+            struct sockaddr_in si_me, si_other;
+            int slen = sizeof(si_other);
+            char buf[BUFLEN];
+
+            memset((char*) &si_me, 0, sizeof(si_me));
+            si_me.sin_family      = AF_INET;
+            si_me.sin_port        = htons(PORT);
+            si_me.sin_addr.s_addr = htonl(INADDR_ANY);
+
+            if (bind(s, &si_me, sizeof(si_me)) != -1)
             {
-                // no delay!
-                ddcci_writectrl(&mon, ctrl, value, -1);
+                while (1)
+                {
+                    if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen) == -1)
+                    {
+                        fprintf(stderr, "Failed creating udp socket");
+                        break;
+                    }
+                    else
+                    {
+                        unsigned char x = buf[0];
+                        printf("Received char %x = %c \n", x, x);
+                        if (x < 100)
+                            ddcci_writectrl(&mon, ctrl, x, -1);
+                    }
+                }
             }
-        }*/
+
+            close(s);
+        }
+        else
+        {
+            fprintf(stderr, "Failed creating udp socket");
+        }
     }
 
-    // free FIFO
-    unlink(myfifo);
 
     ddcci_close(&mon);
     ddcci_release();
