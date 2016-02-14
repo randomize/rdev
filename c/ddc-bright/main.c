@@ -33,7 +33,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#define BUFLEN 1
+#define BUFLEN 32
 #define PORT 9930
 
 
@@ -70,6 +70,9 @@ int main(int argc, char** argv)
 
     // Setting brightness register
     int ctrl  = 0x10;
+    int value = 50;
+    int cur_value = 0 ;
+    /* TODO: read cur! */
 
     ddcci_verbosity(verbosity);
 
@@ -117,17 +120,45 @@ int main(int argc, char** argv)
             {
                 while (1)
                 {
-                    if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen) == -1)
+                    int len = recvfrom(s, buf, BUFLEN, 0, &si_other, &slen);
+                    if (len == -1)
                     {
                         fprintf(stderr, "Failed creating udp socket");
                         break;
                     }
                     else
                     {
-                        unsigned char x = buf[0];
-                        printf("Received char %x = %c \n", x, x);
-                        if (x < 100)
-                            ddcci_writectrl(&mon, ctrl, x, -1);
+                        for (int i = 0; i < len; i++)
+                        {
+                            char x = buf[i];
+
+                            if (x == 'u')
+                            {
+                                // printf("Up\n");
+                                value += 4;
+                            }
+                            else if (x == 'd')
+                            {
+                                // printf("Down\n");
+                                value -= 4;
+                            }
+                            else
+                            {
+                                continue;
+                            }
+
+                            if (value > 100)
+                                value = 100;
+
+                            if (value < 0)
+                                value = 0;
+                        }
+
+                        //fprintf(stdout, "%d\n", value);
+                        if (value != cur_value) {
+                            ddcci_writectrl(&mon, ctrl, value, -1);
+                            cur_value = value;
+                        }
                     }
                 }
             }
