@@ -40,6 +40,7 @@ flags = [
 '-Wpedantic',
 '-Wno-long-long',
 '-Wno-variadic-macros',
+'-mavx',
 '-fexceptions',
 '-DNDEBUG',
 '-std=c++11',
