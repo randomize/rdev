@@ -21,7 +21,7 @@ void draw(GLFWwindow* window)
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
 
-    float  ratio = width / (float) height;
+    float ratio = width / (float) height;
     glViewport(0, 0, width, height);
 
     glClear(GL_COLOR_BUFFER_BIT);
