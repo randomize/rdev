@@ -2,7 +2,7 @@
 
 CC=clang++
 GL_OPTIONS=-lGLEW -lglfw -lGL -lXmu -lX11 -lm
-CFLAGS=-std=c++11 -Wall -c  -ggdb -O0  -I/usr/include/GLFW
+CFLAGS=-std=c++11 -Wall -c  -ggdb -O0  -I/usr/include/GLFW -stdlib=libc++
 LDFLAGS=$(GL_OPTIONS) 
 
 SOURCES=HelloGLFW.cpp
