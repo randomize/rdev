@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"math/cmplx"
 	"math/rand"
+	"net/http"
 	"runtime"
 	"time"
 )
@@ -41,6 +42,7 @@ func Sqrt(x float64) (z float64) {
 }
 
 func WriteDay() {
+
 	today := time.Now().Weekday()
 	switch time.Saturday {
 	case today + 0:
@@ -54,7 +56,7 @@ func WriteDay() {
 	}
 }
 
-func main() {
+func tests() {
 
 	WriteDay()
 
@@ -87,4 +89,17 @@ func main() {
 	}
 	fmt.Println(sum)
 
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Got %s from \n", r.Method, r.UserAgent())
+	fmt.Fprintf(w, "Hi there, I love %s", r.URL.Path[1:])
+}
+
+func main() {
+
+	fmt.Println("Starting server")
+
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":8888", nil)
 }
